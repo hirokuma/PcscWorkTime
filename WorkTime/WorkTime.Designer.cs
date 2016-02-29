@@ -1,4 +1,4 @@
-﻿namespace PcscSample01
+﻿namespace WorkTime
 {
     partial class WorkTime
     {

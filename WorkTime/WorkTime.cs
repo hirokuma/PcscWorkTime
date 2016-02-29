@@ -8,12 +8,14 @@ using PCSC;
 using PCSC.Iso7816;
 using System.Threading;
 
-namespace PcscSample01
+namespace WorkTime
 {
     public partial class WorkTime : Form
     {
         SCardContext mContext;
         SCardReader mReader;
+
+        int mPeriod;
 
         //アプリケーション識別子
         byte[][] AID = new byte[][]
@@ -43,6 +45,14 @@ namespace PcscSample01
 
             int num = updateComboRw();
             buttonConnect.Enabled = (num != 0);
+
+            //監視周期
+            mPeriod = Properties.Settings.Default.Period;
+            if ((mPeriod <= 0) || (30 < mPeriod))
+            {
+                MessageBox.Show("Invalid Settings : 1 <= Period <= 30");
+                Application.Exit();
+            }
         }
 
         private void buttonRwDetect_Click(object sender, EventArgs e)
@@ -124,7 +134,7 @@ namespace PcscSample01
             while(!backgroundWorker.CancellationPending)
             {
                 //
-                Thread.Sleep(1000);
+                Thread.Sleep(1000 * 60 * mPeriod);
                 backgroundWorker.ReportProgress(0);
             }
         }
