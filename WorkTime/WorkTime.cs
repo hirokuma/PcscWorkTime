@@ -16,6 +16,7 @@ namespace WorkTime
         SCardReader mReader;
 
         int mPeriod;
+        string mAtr;
 
         //アプリケーション識別子
         byte[][] AID = new byte[][]
@@ -31,12 +32,6 @@ namespace WorkTime
         public WorkTime()
         {
             InitializeComponent();
-
-            //Enabled=false
-            foreach (Control ctrl in groupControl.Controls)
-            {
-                ctrl.Enabled = false;
-            }
 
             //リソースマネージャとの接続
             mContext = new SCardContext();
@@ -76,11 +71,6 @@ namespace WorkTime
                     buttonConnect.Text = "Disconnect";
                     buttonRwDetect.Enabled = false;
                     comboRw.Enabled = false;
-
-                    foreach (Control ctrl in groupControl.Controls)
-                    {
-                        ctrl.Enabled = true;
-                    }
                     buttonWatch.Enabled = false;
                 }
                 else
@@ -97,11 +87,6 @@ namespace WorkTime
                     buttonConnect.Text = "Connect";
                     buttonRwDetect.Enabled = true;
                     comboRw.Enabled = true;
-
-                    foreach (Control ctrl in groupControl.Controls)
-                    {
-                        ctrl.Enabled = false;
-                    }
                     buttonWatch.Enabled = true;
                 }
                 else
@@ -131,44 +116,77 @@ namespace WorkTime
 
         private void backgroundWorker_DoWork(object sender, DoWorkEventArgs e)
         {
+            mAtr = "";
+
             while(!backgroundWorker.CancellationPending)
             {
                 //
-                Thread.Sleep(1000 * 60 * mPeriod);
+                Thread.Sleep(2000);     //短いと抜出を検知できないようだ
                 backgroundWorker.ReportProgress(0);
             }
         }
 
         private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
-            string btn_str = "Fail connect.";
+            SCardError err;
+            string btn_str = "No Card";
 
-            //接続
-            SCardError err = mReader.Connect((string)comboRw.SelectedItem, SCardShareMode.Shared, SCardProtocol.Any);
-            if (err == SCardError.Success)
-            {
-                bool ret;
-
-                string data = "";
-                ret = sendGetData(mReader, ref data);
-                if (ret)
+            try {
+                //接続
+                if (mReader.IsConnected)
                 {
-                    btn_str = data;
+                    bool ret;
+
+                    string data = "";
+                    ret = sendGetData(mReader, ref data);
+                    if (ret)
+                    {
+                        btn_str = data;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("fail: sendGetData()");
+                        throw new InvalidOperationException();
+                    }
+
+                    string stat = "";
+                    ret = readerStatus(mReader, ref stat);
+                    if (ret)
+                    {
+                        textStatus.Text = stat;
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("fail: readerStatus()");
+                        throw new InvalidOperationException();
+                    }
                 }
-
-                string stat = "";
-                ret = readerStatus(mReader, ref stat);
-                textStatus.Text = stat;
-
-                //切断
-                err = mReader.Disconnect(SCardReaderDisposition.Leave);
+                else
+                {
+                    err = mReader.Connect((string)comboRw.SelectedItem, SCardShareMode.Exclusive, SCardProtocol.Any);
+                    if (err == SCardError.Success)
+                    {
+                        btn_str = "";   //出力しない
+                        System.Diagnostics.Debug.WriteLine("Connect");
+                    }
+                    else
+                    {
+                        System.Diagnostics.Debug.WriteLine("fail: Connect()");
+                    }
+                }
             }
-            else
+            catch (InvalidOperationException)
             {
-                //エラー
+                mReader.Disconnect(SCardReaderDisposition.Reset);
             }
 
             buttonWatch.Text = btn_str;
+            if ((btn_str.Length != 0) && (mAtr != btn_str))
+            {
+                textHistory.Text += DateTime.Now.ToString("yyyy/MM/dd HH:mm ") + btn_str + "\r\n";
+                textHistory.Select(textHistory.Text.Length, 0);
+                mAtr = btn_str;
+            }
         }
 
         private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
@@ -177,6 +195,15 @@ namespace WorkTime
             buttonRwDetect.Enabled = true;
             buttonConnect.Enabled = true;
             comboRw.Enabled = true;
+
+            //切断
+            try {
+                mReader.Disconnect(SCardReaderDisposition.Reset);
+            }
+            catch (InvalidOperationException)
+            {
+
+            }
         }
 
 
@@ -233,7 +260,7 @@ namespace WorkTime
             err = reader.BeginTransaction();
             if (err != SCardError.Success)
             {
-                MessageBox.Show("Fail BeginTransaction.", "BEGIN TRANSACTION");
+                //MessageBox.Show("Fail BeginTransaction.", "BEGIN TRANSACTION");
                 return false;
             }
 

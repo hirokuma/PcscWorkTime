@@ -31,10 +31,10 @@
             this.buttonRwDetect = new System.Windows.Forms.Button();
             this.comboRw = new System.Windows.Forms.ComboBox();
             this.buttonConnect = new System.Windows.Forms.Button();
-            this.groupControl = new System.Windows.Forms.GroupBox();
             this.buttonWatch = new System.Windows.Forms.Button();
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.textStatus = new System.Windows.Forms.TextBox();
+            this.textHistory = new System.Windows.Forms.TextBox();
             this.SuspendLayout();
             // 
             // buttonRwDetect
@@ -67,15 +67,6 @@
             this.buttonConnect.UseVisualStyleBackColor = true;
             this.buttonConnect.Click += new System.EventHandler(this.buttonConnect_Click);
             // 
-            // groupControl
-            // 
-            this.groupControl.Location = new System.Drawing.Point(12, 120);
-            this.groupControl.Name = "groupControl";
-            this.groupControl.Size = new System.Drawing.Size(358, 141);
-            this.groupControl.TabIndex = 4;
-            this.groupControl.TabStop = false;
-            this.groupControl.Text = "Status";
-            // 
             // buttonWatch
             // 
             this.buttonWatch.Location = new System.Drawing.Point(196, 38);
@@ -102,14 +93,26 @@
             this.textStatus.Size = new System.Drawing.Size(346, 19);
             this.textStatus.TabIndex = 0;
             // 
+            // textHistory
+            // 
+            this.textHistory.BackColor = System.Drawing.SystemColors.ButtonHighlight;
+            this.textHistory.HideSelection = false;
+            this.textHistory.Location = new System.Drawing.Point(18, 114);
+            this.textHistory.Multiline = true;
+            this.textHistory.Name = "textHistory";
+            this.textHistory.ReadOnly = true;
+            this.textHistory.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
+            this.textHistory.Size = new System.Drawing.Size(346, 147);
+            this.textHistory.TabIndex = 0;
+            // 
             // WorkTime
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 12F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(382, 273);
+            this.Controls.Add(this.textHistory);
             this.Controls.Add(this.textStatus);
             this.Controls.Add(this.buttonWatch);
-            this.Controls.Add(this.groupControl);
             this.Controls.Add(this.buttonConnect);
             this.Controls.Add(this.comboRw);
             this.Controls.Add(this.buttonRwDetect);
@@ -125,10 +128,10 @@
         private System.Windows.Forms.Button buttonRwDetect;
         private System.Windows.Forms.ComboBox comboRw;
         private System.Windows.Forms.Button buttonConnect;
-        private System.Windows.Forms.GroupBox groupControl;
         private System.Windows.Forms.Button buttonWatch;
         private System.ComponentModel.BackgroundWorker backgroundWorker;
         private System.Windows.Forms.TextBox textStatus;
+        private System.Windows.Forms.TextBox textHistory;
     }
 }
 
