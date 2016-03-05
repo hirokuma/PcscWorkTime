@@ -28,9 +28,9 @@
         /// </summary>
         private void InitializeComponent()
         {
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(WorkTime));
             this.buttonRwDetect = new System.Windows.Forms.Button();
             this.comboRw = new System.Windows.Forms.ComboBox();
-            this.buttonConnect = new System.Windows.Forms.Button();
             this.buttonWatch = new System.Windows.Forms.Button();
             this.backgroundWorker = new System.ComponentModel.BackgroundWorker();
             this.textStatus = new System.Windows.Forms.TextBox();
@@ -56,22 +56,11 @@
             this.comboRw.Size = new System.Drawing.Size(277, 20);
             this.comboRw.TabIndex = 1;
             // 
-            // buttonConnect
-            // 
-            this.buttonConnect.Enabled = false;
-            this.buttonConnect.Location = new System.Drawing.Point(12, 38);
-            this.buttonConnect.Name = "buttonConnect";
-            this.buttonConnect.Size = new System.Drawing.Size(177, 23);
-            this.buttonConnect.TabIndex = 3;
-            this.buttonConnect.Text = "Connect";
-            this.buttonConnect.UseVisualStyleBackColor = true;
-            this.buttonConnect.Click += new System.EventHandler(this.buttonConnect_Click);
-            // 
             // buttonWatch
             // 
-            this.buttonWatch.Location = new System.Drawing.Point(196, 38);
+            this.buttonWatch.Location = new System.Drawing.Point(12, 38);
             this.buttonWatch.Name = "buttonWatch";
-            this.buttonWatch.Size = new System.Drawing.Size(168, 23);
+            this.buttonWatch.Size = new System.Drawing.Size(352, 23);
             this.buttonWatch.TabIndex = 5;
             this.buttonWatch.Text = "Watch";
             this.buttonWatch.UseVisualStyleBackColor = true;
@@ -113,11 +102,12 @@
             this.Controls.Add(this.textHistory);
             this.Controls.Add(this.textStatus);
             this.Controls.Add(this.buttonWatch);
-            this.Controls.Add(this.buttonConnect);
             this.Controls.Add(this.comboRw);
             this.Controls.Add(this.buttonRwDetect);
+            this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.Name = "WorkTime";
             this.Text = "WorkTime";
+            this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.WorkTime_FormClosing);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -127,7 +117,6 @@
 
         private System.Windows.Forms.Button buttonRwDetect;
         private System.Windows.Forms.ComboBox comboRw;
-        private System.Windows.Forms.Button buttonConnect;
         private System.Windows.Forms.Button buttonWatch;
         private System.ComponentModel.BackgroundWorker backgroundWorker;
         private System.Windows.Forms.TextBox textStatus;

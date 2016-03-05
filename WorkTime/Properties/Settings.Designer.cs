@@ -22,17 +22,5 @@ namespace WorkTime.Properties {
                 return defaultInstance;
             }
         }
-        
-        [global::System.Configuration.UserScopedSettingAttribute()]
-        [global::System.Diagnostics.DebuggerNonUserCodeAttribute()]
-        [global::System.Configuration.DefaultSettingValueAttribute("1")]
-        public int Period {
-            get {
-                return ((int)(this["Period"]));
-            }
-            set {
-                this["Period"] = value;
-            }
-        }
     }
 }

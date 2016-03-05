@@ -7,6 +7,7 @@ using System.Windows.Forms;
 using PCSC;
 using PCSC.Iso7816;
 using System.Threading;
+using System.IO;
 
 namespace WorkTime
 {
@@ -15,19 +16,9 @@ namespace WorkTime
         SCardContext mContext;
         SCardReader mReader;
 
-        int mPeriod;
         string mAtr;
-
-        //アプリケーション識別子
-        byte[][] AID = new byte[][]
-        {
-            new byte[] { 0xa0, 0x00, 0x00, 0x02, 0x31, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-            new byte[] { 0xa0, 0x00, 0x00, 0x02, 0x31, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 },
-            new byte[] { 0xa0, 0x00, 0x00, 0x02, 0x48, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }
-        };
-        //byte[] AID_DF1 = new byte[] { 0xa0, 0x00, 0x00, 0x02, 0x31, 0x01, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        //byte[] AID_DF2 = new byte[] { 0xa0, 0x00, 0x00, 0x02, 0x31, 0x02, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-        //byte[] AID_DF3 = new byte[] { 0xa0, 0x00, 0x00, 0x02, 0x48, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
+        StreamWriter mWrite;
+        DateTime mTime = DateTime.MaxValue;
 
         public WorkTime()
         {
@@ -39,60 +30,25 @@ namespace WorkTime
             mReader = new SCardReader(mContext);
 
             int num = updateComboRw();
-            buttonConnect.Enabled = (num != 0);
+            buttonWatch.Enabled = (num != 0);
 
-            //監視周期
-            mPeriod = Properties.Settings.Default.Period;
-            if ((mPeriod <= 0) || (30 < mPeriod))
-            {
-                MessageBox.Show("Invalid Settings : 1 <= Period <= 30");
-                Application.Exit();
-            }
+            //記録ファイル
+            mWrite = new StreamWriter("WorkTime.log", true);
+        }
+
+        private void WorkTime_FormClosing(object sender, FormClosingEventArgs e)
+        {
+            saveTime("--exit--\r\n");
+            mWrite.Close();
         }
 
         private void buttonRwDetect_Click(object sender, EventArgs e)
         {
             int num = updateComboRw();
-            buttonConnect.Enabled = (num != 0);
+            buttonWatch.Enabled = (num != 0);
             if (num == 0)
             {
                 MessageBox.Show("R/W not found", "NOT FOUND", MessageBoxButtons.OK, MessageBoxIcon.Error);
-            }
-        }
-
-        private void buttonConnect_Click(object sender, EventArgs e)
-        {
-            if (!mReader.IsConnected)
-            {
-                //接続
-                SCardError err = mReader.Connect((string)comboRw.SelectedItem, SCardShareMode.Shared, SCardProtocol.Any);
-                if (err == SCardError.Success)
-                {
-                    buttonConnect.Text = "Disconnect";
-                    buttonRwDetect.Enabled = false;
-                    comboRw.Enabled = false;
-                    buttonWatch.Enabled = false;
-                }
-                else
-                {
-                    MessageBox.Show("Fail connect.");
-                }
-            }
-            else
-            {
-                //切断
-                SCardError err = mReader.Disconnect(SCardReaderDisposition.Leave);
-                if (err == SCardError.Success)
-                {
-                    buttonConnect.Text = "Connect";
-                    buttonRwDetect.Enabled = true;
-                    comboRw.Enabled = true;
-                    buttonWatch.Enabled = true;
-                }
-                else
-                {
-                    MessageBox.Show("Fail disconnect.");
-                }
             }
         }
 
@@ -102,11 +58,13 @@ namespace WorkTime
             if (!backgroundWorker.IsBusy)
             {
                 buttonRwDetect.Enabled = false;
-                buttonConnect.Enabled = false;
                 comboRw.Enabled = false;
                 buttonWatch.Text = "Watching...";
 
                 backgroundWorker.RunWorkerAsync();
+
+                string line = DateTime.Now.ToString("\r\nyyyy/MM/dd HH:mm ") + "--start--" + "\r\n";
+                mWrite.Write(line);
             }
             else
             {
@@ -129,7 +87,7 @@ namespace WorkTime
         private void backgroundWorker_ProgressChanged(object sender, ProgressChangedEventArgs e)
         {
             SCardError err;
-            string btn_str = "No Card";
+            string btn_str = "NoCard";
 
             try {
                 //接続
@@ -183,17 +141,37 @@ namespace WorkTime
             buttonWatch.Text = btn_str;
             if ((btn_str.Length != 0) && (mAtr != btn_str))
             {
-                textHistory.Text += DateTime.Now.ToString("yyyy/MM/dd HH:mm ") + btn_str + "\r\n";
+                saveTime(btn_str);
+
                 textHistory.Select(textHistory.Text.Length, 0);
+                textHistory.ScrollToCaret();
                 mAtr = btn_str;
             }
+        }
+
+        private void saveTime(string btn_str)
+        {
+            string line;
+
+            if (mTime != DateTime.MaxValue)
+            {
+                TimeSpan ts = DateTime.Now - mTime;
+                int hour = (int)(ts.TotalMinutes / 60);
+                int min = (int)(ts.TotalMinutes - hour * 60);
+                line = "\t" + hour + ":" + min.ToString("D2") + "\r\n";
+                mWrite.Write(line);
+            }
+            mTime = DateTime.Now;
+            line = DateTime.Now.ToString("yyyy/MM/dd\tHH:mm\t") + btn_str;
+            textHistory.Text += line + "\r\n";
+            mWrite.Write(line);
+            mWrite.Flush();
         }
 
         private void backgroundWorker_RunWorkerCompleted(object sender, RunWorkerCompletedEventArgs e)
         {
             buttonWatch.Text = "Watch";
             buttonRwDetect.Enabled = true;
-            buttonConnect.Enabled = true;
             comboRw.Enabled = true;
 
             //切断
